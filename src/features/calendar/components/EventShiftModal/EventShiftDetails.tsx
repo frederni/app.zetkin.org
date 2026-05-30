@@ -4,6 +4,8 @@ import {
   Autocomplete,
   Box,
   Button,
+  Checkbox,
+  FormControlLabel,
   TextField,
   Typography,
 } from '@mui/material';
@@ -23,6 +25,7 @@ import { Msg, useMessages } from 'core/i18n';
 import { ZetkinEvent, ZetkinLocation } from 'utils/types/zetkin';
 
 interface EventShiftDetailsProps {
+  autoReminderHours: number | null;
   eventDate: Dayjs;
   eventDescription: string;
   eventEndTime: Dayjs;
@@ -31,6 +34,7 @@ interface EventShiftDetailsProps {
   eventStartTime: Dayjs;
   eventTitle: string;
   locationId: number | null;
+  onAutoReminderHoursChange: (hours: number | null) => void;
   onEventDateChange: (newDate: Dayjs | null) => void;
   onEventDescriptionChange: (newDescription: string) => void;
   onEventLinkChange: (newLink: string) => void;
@@ -44,6 +48,7 @@ interface EventShiftDetailsProps {
 }
 
 const EventShiftDetails: FC<EventShiftDetailsProps> = ({
+  autoReminderHours,
   eventDate,
   eventDescription,
   eventEndTime,
@@ -52,6 +57,7 @@ const EventShiftDetails: FC<EventShiftDetailsProps> = ({
   eventTitle,
   eventStartTime,
   locationId,
+  onAutoReminderHoursChange,
   onEventDateChange,
   onEventDescriptionChange,
   onEventLinkChange,
@@ -249,6 +255,32 @@ const EventShiftDetails: FC<EventShiftDetailsProps> = ({
             }}
             value={eventParticipants === null ? '' : eventParticipants}
           />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={autoReminderHours !== null}
+                onChange={(ev) => {
+                  onAutoReminderHoursChange(ev.target.checked ? 24 : null);
+                }}
+              />
+            }
+            label={messages.autoReminder.checkboxLabel()}
+          />
+          {autoReminderHours !== null && (
+            <TextField
+              fullWidth
+              label={messages.autoReminder.hoursLabel()}
+              onChange={(ev) => {
+                const val = ev.target.value;
+                const intVal = parseInt(val);
+                if (!isNaN(intVal) && intVal > 0) {
+                  onAutoReminderHoursChange(intVal);
+                }
+              }}
+              type="number"
+              value={autoReminderHours}
+            />
+          )}
         </>
       )}
     </Box>

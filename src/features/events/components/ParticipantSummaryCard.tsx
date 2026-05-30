@@ -1,7 +1,9 @@
 import {
   Box,
   Button,
+  Checkbox,
   ClickAwayListener,
+  FormControlLabel,
   Paper,
   Popper,
   TextField,
@@ -13,6 +15,7 @@ import { FC, useState } from 'react';
 import messageIds from 'features/events/l10n/messageIds';
 import { removeOffset } from 'utils/dateUtils';
 import useEvent from '../hooks/useEvent';
+import useEventAutoReminder from '../hooks/useEventAutoReminder';
 import useEventParticipants from '../hooks/useEventParticipants';
 import useEventParticipantsMutations from '../hooks/useEventParticipantsMutations';
 import useParticipantStatus from '../hooks/useParticipantsStatus';
@@ -33,6 +36,7 @@ const ParticipantSummaryCard: FC<ParticipantSummaryCardProps> = ({
   orgId,
 }) => {
   const event = useEvent(orgId, eventId)?.data;
+  const autoReminder = useEventAutoReminder(orgId, eventId);
   const participantStatus = useParticipantStatus(orgId, eventId);
   const {
     numSignedUpParticipants,
@@ -144,7 +148,7 @@ const ParticipantSummaryCard: FC<ParticipantSummaryCardProps> = ({
           </Box>
         }
       >
-        <Box display="flex" justifyContent="space-between">
+        <Box display="flex" justifyContent="space-between" pb={2}>
           <Box display="flex" flexDirection="column">
             <Typography color={'secondary'}>
               {messages.participantSummaryCard.pending()}
@@ -224,6 +228,46 @@ const ParticipantSummaryCard: FC<ParticipantSummaryCardProps> = ({
             marginBottom={1}
           />
         </Box>
+        {!autoReminder.loading && (
+          <Box borderTop={1} borderColor="divider" px={2} py={1}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={!!autoReminder.data}
+                  disabled={!!autoReminder.data?.sent}
+                  onChange={(ev) => {
+                    if (ev.target.checked) {
+                      autoReminder.setAutoReminder(24, event.start_time);
+                    } else {
+                      autoReminder.deleteAutoReminder();
+                    }
+                  }}
+                />
+              }
+              label={messages.autoReminder.checkboxLabel()}
+            />
+            {autoReminder.data && !autoReminder.data.sent && (
+              <TextField
+                label={messages.autoReminder.hoursLabel()}
+                onChange={(ev) => {
+                  const intVal = parseInt(ev.target.value);
+                  if (!isNaN(intVal) && intVal > 0) {
+                    autoReminder.setAutoReminder(intVal, event.start_time);
+                  }
+                }}
+                size="small"
+                sx={{ display: 'block', mt: 1 }}
+                type="number"
+                value={autoReminder.data.hoursBeforeEvent}
+              />
+            )}
+            {autoReminder.data?.sent && (
+              <Typography color="text.secondary" variant="body2">
+                {messages.autoReminder.alreadySent()}
+              </Typography>
+            )}
+          </Box>
+        )}
       </ZUICard>
     </Box>
   );

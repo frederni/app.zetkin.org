@@ -151,6 +151,12 @@ export default makeMessages('feat.events', {
   eventRelatedCard: {
     header: m('Related events'),
   },
+  autoReminder: {
+    alreadySent: m('Reminder already sent'),
+    checkboxLabel: m('Auto-remind participants'),
+    hoursLabel: m('Hours before event'),
+    scheduledFor: m<{ sendAt: string }>('Reminder scheduled for {sendAt}'),
+  },
   eventShiftModal: {
     addShift: m('Add shift'),
     customTitle: m('Custom title'),

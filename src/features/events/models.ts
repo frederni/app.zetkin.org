@@ -27,3 +27,45 @@ const eventSignupSchema = new mongoose.Schema<EventSignupModelType>({
 export const EventSignupModel: mongoose.Model<EventSignupModelType> =
   mongoose.models.EventSignup ||
   mongoose.model<EventSignupModelType>('EventSignup', eventSignupSchema);
+
+export type EventAutoReminderModelType = {
+  eventId: number;
+  hoursBeforeEvent: number;
+  orgId: number;
+  sendAt: string;
+  sent: boolean;
+  tokenData: {
+    access_token: string;
+    expires_in: number;
+    refresh_token: string;
+    token_type: string;
+  };
+};
+
+const eventAutoReminderSchema = new mongoose.Schema<EventAutoReminderModelType>(
+  {
+    eventId: { required: true, type: Number },
+    hoursBeforeEvent: { required: true, type: Number },
+    orgId: { required: true, type: Number },
+    sendAt: { required: true, type: String },
+    sent: { default: false, type: Boolean },
+    tokenData: {
+      required: true,
+      type: {
+        access_token: String,
+        expires_in: Number,
+        refresh_token: String,
+        token_type: String,
+      },
+    },
+  }
+);
+
+eventAutoReminderSchema.index({ eventId: 1, orgId: 1 }, { unique: true });
+
+export const EventAutoReminderModel: mongoose.Model<EventAutoReminderModelType> =
+  mongoose.models.EventAutoReminder ||
+  mongoose.model<EventAutoReminderModelType>(
+    'EventAutoReminder',
+    eventAutoReminderSchema
+  );

@@ -27,6 +27,9 @@ const EventShiftModal: FC<EventShiftModalProps> = ({ close, dates, open }) => {
   const { orgId, campId } = useNumericRouteParams();
   const { showSnackbar } = useContext(ZUISnackbarContext);
 
+  const [autoReminderHours, setAutoReminderHours] = useState<number | null>(
+    null
+  );
   const [type, setType] = useState<ZetkinEvent['activity']>(null);
   const [eventTitle, setEventTitle] = useState<string>('');
   const [eventDate, setEventDate] = useState<Dayjs>(startDate);
@@ -58,7 +61,7 @@ const EventShiftModal: FC<EventShiftModalProps> = ({ close, dates, open }) => {
 
   async function publishShifts(publish: boolean) {
     try {
-      await Promise.all(
+      const createdEvents = await Promise.all(
         eventShifts.map((shift, index) => {
           const endTime =
             index < eventShifts.length - 1
@@ -97,6 +100,21 @@ const EventShiftModal: FC<EventShiftModalProps> = ({ close, dates, open }) => {
           );
         })
       );
+
+      if (autoReminderHours !== null) {
+        await Promise.all(
+          createdEvents.map((event) =>
+            fetch(`/beta/orgs/${orgId}/events/${event.id}/auto-reminder`, {
+              body: JSON.stringify({
+                hoursBeforeEvent: autoReminderHours,
+                startTime: event.start_time,
+              }),
+              headers: { 'Content-Type': 'application/json' },
+              method: 'PUT',
+            })
+          )
+        );
+      }
 
       showSnackbar(
         'success',
@@ -145,6 +163,7 @@ const EventShiftModal: FC<EventShiftModalProps> = ({ close, dates, open }) => {
         >
           <Box flex={1}>
             <EventShiftDetails
+              autoReminderHours={autoReminderHours}
               eventDate={eventDate}
               eventDescription={eventDescription}
               eventEndTime={eventEndTime}
@@ -153,6 +172,7 @@ const EventShiftModal: FC<EventShiftModalProps> = ({ close, dates, open }) => {
               eventStartTime={eventStartTime}
               eventTitle={eventTitle}
               locationId={locationId}
+              onAutoReminderHoursChange={(hours) => setAutoReminderHours(hours)}
               onEventDateChange={(newDate) => {
                 if (newDate && newDate.isValid()) {
                   setInvalidDate(false);
